@@ -48,28 +48,31 @@ fi
 
 
 # Update users and roles with if username and password is passed as argument
-if [ "$ARTEMIS_USERNAME" ] && [ "$ARTEMIS_PASSWORD" ]; then
+#if [ "$ARTEMIS_USERNAME" ] && [ "$ARTEMIS_PASSWORD" ]; then
   # From 1.0.0 up to 1.1.0 the artemis roles file was user=groups
   # From 1.2.0 to 1.4.0 became group=users and we still set it with sed
-  if echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[01].[0-9]" ; then
-    sed -i "s/artemis=amq/$ARTEMIS_USERNAME=amq\\n/g" ../etc/artemis-roles.properties
-  elif echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[2-4].[0-9]" ; then
-    sed -i "s/amq[ ]*=.*/amq=$ARTEMIS_USERNAME\\n/g" ../etc/artemis-roles.properties
-  fi
+#  if echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[01].[0-9]" ; then
+#    sed -i "s/artemis=amq/$ARTEMIS_USERNAME=amq\\n/g" ../etc/artemis-roles.properties
+#  elif echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[2-4].[0-9]" ; then
+#    sed -i "s/amq[ ]*=.*/amq=$ARTEMIS_USERNAME\\n/g" ../etc/artemis-roles.properties
+#  fi
   
   # 1.5.0 and later are set using the cli both for username and role
-  if echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[0-4].[0-9]" ; then
-    sed -i "s/artemis[ ]*=.*/$ARTEMIS_USERNAME=$ARTEMIS_PASSWORD\\n/g" ../etc/artemis-users.properties
-  else
-    if ${BROKER_HOME}/bin/artemis user list | grep -Eq "\"artemis\"" ; then
-      $BROKER_HOME/bin/artemis user rm --user artemis
-    fi
-    if ${BROKER_HOME}/bin/artemis user list | grep -Eq "\"${ARTEMIS_USERNAME}\"" ; then
-      $BROKER_HOME/bin/artemis user rm --user "$ARTEMIS_USERNAME"
-    fi
-    $BROKER_HOME/bin/artemis user add --user "$ARTEMIS_USERNAME" --password "$ARTEMIS_PASSWORD" --role amq
-  fi
-fi
+#  if echo "${ACTIVEMQ_ARTEMIS_VERSION}" | grep -Eq "1.[0-4].[0-9]" ; then
+#    sed -i "s/artemis[ ]*=.*/$ARTEMIS_USERNAME=$ARTEMIS_PASSWORD\\n/g" ../etc/artemis-users.properties
+#  else
+#    $BROKER_HOME/bin/artemis user add --user artemis --password simetraehcapa --role amq \
+#      --user-command-user "$ARTEMIS_USERNAME" --user-command-password "$ARTEMIS_PASSWORD"
+#    if ${BROKER_HOME}/bin/artemis user list --user artemis --password simetraehcapa | grep -Eq "\"artemis\"" ; then
+#      $BROKER_HOME/bin/artemis user rm --user artemis --password simetraehcapa \
+#        --user-command-user artemis
+#    fi
+#    if ${BROKER_HOME}/bin/artemis user list | grep -Eq "artemis" ; then
+#      $BROKER_HOME/bin/artemis user rm --user artemis --password simetraehcapa \
+#        --user-command-user artemis
+#    fi
+#  fi
+#fi
 
 # Update min memory if the argument is passed
 if [ "$ARTEMIS_MIN_MEMORY" ]; then
@@ -216,7 +219,12 @@ if [ ${#files[@]} ]; then
 fi
 
 if [ "$1" = 'artemis-server' ]; then
-  exec dumb-init -- sh ./artemis run
+  sh ./artemis run
+  sleep 15
+  echo "Creando el usaurio ${ARTEMIS_USERNAME} con pass ${ARTEMIS_PASSWORD}" 
+  sh ./artemis user add --user artemis  --password simetraehcapa \
+    --user-command-user "${ARTEMIS_USERNAME}" --user-command-password "${ARTEMIS_PASSWORD}" --role amq
+  sh ./artemis user rm --user "${ARTEMIS_USERNAME}"  --password "${ARTEMIS_PASSWORD}" --user-command-user artemis
 fi
 
 exec "$@"
